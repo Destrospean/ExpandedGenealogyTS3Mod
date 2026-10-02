@@ -19,7 +19,7 @@ namespace Destrospean.Lang.ExpandedGenealogy
 
         public string GetAncestorString(Genealogy ancestor, Genealogy descendant)
         {
-            return GetAncestorString((ancestor.SimDescription ?? ancestor.mMiniSim).IsFemale, ancestor, descendant, false);
+            return GetAncestorString(ancestor.IMiniSimDescription.IsFemale, ancestor, descendant, false);
         }
 
         public virtual string GetAncestorString(bool isFemale, Genealogy ancestor, Genealogy descendant, bool isInLaw)
@@ -49,7 +49,7 @@ namespace Destrospean.Lang.ExpandedGenealogy
 
         public string GetDescendantString(Genealogy descendant, Genealogy ancestor)
         {
-            return GetDescendantString((descendant.SimDescription ?? descendant.mMiniSim).IsFemale, descendant, ancestor, false);
+            return GetDescendantString(descendant.IMiniSimDescription.IsFemale, descendant, ancestor, false);
         }
 
         public virtual string GetDescendantString(bool isFemale, Genealogy descendant, Genealogy ancestor, bool isInLaw)
@@ -66,7 +66,7 @@ namespace Destrospean.Lang.ExpandedGenealogy
 
         public string GetDistantRelationString(Genealogy sim, DistantRelationInfo distantRelationInfo)
         {
-            return GetDistantRelationString((sim.SimDescription ?? sim.mMiniSim).IsFemale, sim, distantRelationInfo);
+            return GetDistantRelationString(sim.IMiniSimDescription.IsFemale, sim, distantRelationInfo);
         }
 
         public virtual string GetNthUncleDegreeString(int degree)
@@ -105,14 +105,25 @@ namespace Destrospean.Lang.ExpandedGenealogy
             return Localization.LocalizeString(isFemale, siblingOfAncestorInfo.IsHalfRelative && !Tuning.kShowHalfRelativesAsFullRelatives ? Common.kLocalizationPath + "/RelationNames:GreatNxHalfUncle" : Common.kLocalizationPath + "/RelationNames:GreatNxUncle", greats);
         }
 
-        public bool TryGetDescendantOfSiblingString(SimDescription descendantOfSibling, SimDescription siblingOfAncestor, out string result)
+        public bool TryGetDescendantOfSiblingString(Genealogy descendantOfSibling, Genealogy siblingOfAncestor, out string result)
         {
-            string text = GetDescendantOfSiblingString(descendantOfSibling.IsFemale, descendantOfSibling.Genealogy, siblingOfAncestor.Genealogy);
-            if (string.IsNullOrEmpty(text) && siblingOfAncestor.Genealogy.Spouse != null && siblingOfAncestor.Genealogy.Spouse != descendantOfSibling.Genealogy && siblingOfAncestor.Genealogy.PartnerType == PartnerType.Marriage)
+            string text = GetDescendantOfSiblingString(descendantOfSibling.IMiniSimDescription.IsFemale, descendantOfSibling, siblingOfAncestor);
+            if (string.IsNullOrEmpty(text) && siblingOfAncestor.Spouse != null && siblingOfAncestor.Spouse != descendantOfSibling && siblingOfAncestor.PartnerType == PartnerType.Marriage)
             {
-                text = GetDescendantOfSiblingString(descendantOfSibling.IsFemale, descendantOfSibling.Genealogy, siblingOfAncestor.Genealogy.Spouse);
+                text = GetDescendantOfSiblingString(descendantOfSibling.IMiniSimDescription.IsFemale, descendantOfSibling, siblingOfAncestor.Spouse);
             }
             result = text;
+            return !string.IsNullOrEmpty(result);
+        }
+
+        public bool TryGetDescendantOfSiblingString(SimDescription descendantOfSibling, SimDescription siblingOfAncestor, out string result)
+        {
+            return TryGetDescendantOfSiblingString(descendantOfSibling.Genealogy, siblingOfAncestor.Genealogy, out result);
+        }
+
+        public bool TryGetDistantRelationString(Genealogy simWithRelationName, Genealogy simToGetRelationTo, out string result)
+        {
+            result = GetDistantRelationString(simWithRelationName, simWithRelationName.GetDistantRelationInfo(simToGetRelationTo));
             return !string.IsNullOrEmpty(result);
         }
 
@@ -146,19 +157,23 @@ namespace Destrospean.Lang.ExpandedGenealogy
              *     text = GetDistantRelationString(simWithRelationName.Genealogy, distantRelationInfo);
              * }
              */
-            result = GetDistantRelationString(simWithRelationName.Genealogy, simWithRelationName.Genealogy.GetDistantRelationInfo(simToGetRelationTo.Genealogy));
+            return TryGetDistantRelationString(simWithRelationName.Genealogy, simToGetRelationTo.Genealogy, out result);
+        }
+
+        public bool TryGetSiblingOfAncestorString(Genealogy siblingOfAncestor, Genealogy descendantOfSibling, out string result)
+        {
+            string text = GetSiblingOfAncestorString(siblingOfAncestor.IMiniSimDescription.IsFemale, siblingOfAncestor, descendantOfSibling);
+            if (string.IsNullOrEmpty(text) && siblingOfAncestor.Spouse != null && descendantOfSibling != siblingOfAncestor.Spouse && siblingOfAncestor.PartnerType == PartnerType.Marriage)
+            {
+                text = GetSiblingOfAncestorString(siblingOfAncestor.IMiniSimDescription.IsFemale, siblingOfAncestor.Spouse, descendantOfSibling);
+            }
+            result = text;
             return !string.IsNullOrEmpty(result);
         }
 
         public bool TryGetSiblingOfAncestorString(SimDescription siblingOfAncestor, SimDescription descendantOfSibling, out string result)
         {
-            string text = GetSiblingOfAncestorString(siblingOfAncestor.IsFemale, siblingOfAncestor.Genealogy, descendantOfSibling.Genealogy);
-            if (string.IsNullOrEmpty(text) && siblingOfAncestor.Genealogy.Spouse != null && descendantOfSibling.Genealogy != siblingOfAncestor.Genealogy.Spouse && siblingOfAncestor.Genealogy.PartnerType == PartnerType.Marriage)
-            {
-                text = GetSiblingOfAncestorString(siblingOfAncestor.IsFemale, siblingOfAncestor.Genealogy.Spouse, descendantOfSibling.Genealogy);
-            }
-            result = text;
-            return !string.IsNullOrEmpty(result);
+            return TryGetSiblingOfAncestorString(siblingOfAncestor.Genealogy, descendantOfSibling.Genealogy, out result);
         }
     }
 }

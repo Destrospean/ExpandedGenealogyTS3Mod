@@ -21,6 +21,26 @@ namespace Destrospean.ExpandedGenealogy
                     foreach (Sim sim in Sims3.Gameplay.Queries.GetObjects<Sim>())
                     {
                         AddInteractions(sim);
+                        if (sim.Genealogy != null)
+                        {
+                            MiniSimDescription miniSimDescription = MiniSimDescription.Find(sim.SimDescription.SimDescriptionId);
+                            if (miniSimDescription != null && miniSimDescription.MiniRelationships != null)
+                            {
+                                foreach (MiniRelationship miniRelationship in miniSimDescription.MiniRelationships)
+                                {
+                                    MiniSimDescription otherMiniSimDescription = MiniSimDescription.Find(miniRelationship.GetOtherSimDescriptionId(miniSimDescription));
+                                    if (otherMiniSimDescription != null && otherMiniSimDescription.Genealogy != null)
+                                    {
+                                        miniRelationship.FamilialString = sim.Genealogy.GetMyFamilialDescriptionFor(otherMiniSimDescription.Genealogy);
+                                        if (!string.IsNullOrEmpty(miniRelationship.FamilialString))
+                                        {
+                                            miniRelationship.Entry = miniRelationship.FamilialString;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
                     }
                     if (Household.ActiveHousehold != null)
                     {
@@ -64,6 +84,7 @@ namespace Destrospean.ExpandedGenealogy
             Common.ReplaceMethod(typeof(Genealogy).GetMethod("IsSiblingInLaw"), typeof(Replacements).GetMethod("IsSiblingInLaw"));
             Common.ReplaceMethod(typeof(Genealogy).GetMethod("IsStepRelated"), typeof(Replacements).GetMethod("IsStepRelated"));
             Common.ReplaceMethod(typeof(Genealogy).GetMethod("IsUncle"), typeof(Replacements).GetMethod("IsUncle"));
+            Common.ReplaceMethod(typeof(Sims3.Gameplay.UI.HudModel).GetMethod("GetLTRRelationshipString"), typeof(Replacements).GetMethod("GetLTRRelationshipString"));
             Common.ReplaceMethod(typeof(SimDescription).GetMethod("GetMyFamilialDescriptionFor"), typeof(Replacements).GetMethod("GetMyFamilialDescriptionFor"));
             Common.ReplaceMethod(typeof(SimDescription).GetMethod("MakeUniqueId"), typeof(Replacements).GetMethod("MakeUniqueId"));
             Type nraasWoohooerRelationshipsType = Type.GetType("NRaas.CommonSpace.Helpers.Relationships, NRaasWoohooer");

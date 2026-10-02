@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using Sims3.Gameplay.CAS;
 using Sims3.Gameplay.Socializing;
+using Sims3.Gameplay.Utilities;
 using Sims3.UI.CAS;
+using Sims3.UI.Controller;
 using Tuning = Sims3.Gameplay.Destrospean.ExpandedGenealogy;
 
 namespace Destrospean.ExpandedGenealogy
@@ -447,6 +450,246 @@ namespace Destrospean.ExpandedGenealogy
             return distantRelationInfoList;
         }
 
+        public static string GetMyFamilialDescriptionFor(this Genealogy self, Genealogy other)
+        {
+            string localizationKey = Common.kLocalizationPath + "/RelationNames",
+            text = "";
+            if (other == self)
+            {
+                return text;
+            }
+            if (Genealogy.IsParent(other, self))
+            {
+                text = Localization.LocalizeString(other.IMiniSimDescription.IsFemale, "Gameplay/Socializing:Parent");
+            }
+            else if (Genealogy.IsGrandparent(other, self))
+            {
+                text = Localization.LocalizeString(other.IMiniSimDescription.IsFemale, "Gameplay/Socializing:Grandparent");
+            }
+            else if (Genealogy.IsGreatGrandparent(other, self))
+            {
+                text = Localization.LocalizeString(other.IMiniSimDescription.IsFemale, "Gameplay/Socializing:GGP");
+            }
+            else if (self.GetGenealogyPlaceholder().IsAncestor(other))
+            {
+                text = Common.PlayerLanguage.GetAncestorString(other, self);
+            }
+            else if (Genealogy.IsChild(other, self))
+            {
+                text = Localization.LocalizeString(other.IMiniSimDescription.IsFemale, "Gameplay/Socializing:Child");
+            }
+            else if (Genealogy.IsGrandchild(other, self))
+            {
+                text = Localization.LocalizeString(other.IMiniSimDescription.IsFemale, "Gameplay/Socializing:Grandchild");
+            }
+            else if (Genealogy.IsGreatGrandchild(other, self))
+            {
+                text = Localization.LocalizeString(other.IMiniSimDescription.IsFemale, "Gameplay/Socializing:GGC");
+            }
+            else if (self.GetGenealogyPlaceholder().IsDescendant(other))
+            {
+                text = Common.PlayerLanguage.GetDescendantString(other, self);
+            }
+            else if (Genealogy.IsHalfSibling(other, self) && Tuning.kShowHalfRelatives && !Tuning.kShowHalfRelativesAsFullRelatives)
+            {
+                text = Localization.LocalizeString(other.IMiniSimDescription.IsFemale, "Gameplay/Socializing:HalfSibling");
+            }
+            else if (Genealogy.IsSibling(other, self) && (!Genealogy.IsHalfSibling(other, self) || Tuning.kShowHalfRelativesAsFullRelatives))
+            {
+                text = Localization.LocalizeString(other.IMiniSimDescription.IsFemale, "Gameplay/Socializing:Sibling");
+            }
+            else if (Genealogy.IsStepParent(other, self))
+            {
+                text = Localization.LocalizeString(other.IMiniSimDescription.IsFemale, "Gameplay/Socializing:StepParent");
+            }
+            else if (Genealogy.IsStepChild(other, self))
+            {
+                text = Localization.LocalizeString(other.IMiniSimDescription.IsFemale, "Gameplay/Socializing:StepChild");
+            }
+            else if (Genealogy.IsStepSibling(other, self))
+            {
+                text = Localization.LocalizeString(other.IMiniSimDescription.IsFemale, "Gameplay/Socializing:StepSibling");
+            }
+            else if (GenealogyExtended.IsHalfUncle(other, self) && Tuning.kShowHalfRelatives && !Tuning.kShowHalfRelativesAsFullRelatives)
+            {
+                text = !Common.PlayerLanguage.HasNthUncles || Tuning.kShow1stCousinsAsCousins ? Localization.LocalizeString(other.IMiniSimDescription.IsFemale, localizationKey + ":HalfUncle") : Localization.LocalizeString(other.IMiniSimDescription.IsFemale, localizationKey + ":NthHalfCousinNxRemovedUpward", "1", Localization.LocalizeString(other.IMiniSimDescription.IsFemale, localizationKey + ":OrdinalSuffixNoun1"), "", "");
+            }
+            else if (Genealogy.IsUncle(other, self) && (!GenealogyExtended.IsHalfUncle(other, self) || Tuning.kShowHalfRelativesAsFullRelatives))
+            {
+                text = !Common.PlayerLanguage.HasNthUncles || Tuning.kShow1stCousinsAsCousins ? Localization.LocalizeString(other.IMiniSimDescription.IsFemale, "Gameplay/Socializing:Uncle" + (Genealogy.IsMotherSideUncle(other, self) ? "MothersSide" : "")) : Localization.LocalizeString(other.IMiniSimDescription.IsFemale, localizationKey + ":NthCousinNxRemovedUpward", "1", Localization.LocalizeString(other.IMiniSimDescription.IsFemale, localizationKey + ":OrdinalSuffixNoun1"), "", "");
+            }
+            else if (Common.PlayerLanguage.TryGetSiblingOfAncestorString(other, self, out text))
+            {
+            }
+            else if (GenealogyExtended.IsHalfNephew(other, self) && Tuning.kShowHalfRelatives && !Tuning.kShowHalfRelativesAsFullRelatives)
+            {
+                text = !Common.PlayerLanguage.HasNthUncles || Tuning.kShow1stCousinsAsCousins ? Localization.LocalizeString(other.IMiniSimDescription.IsFemale, localizationKey + ":HalfNephew") : Localization.LocalizeString(other.IMiniSimDescription.IsFemale, localizationKey + ":NthHalfCousinNxRemovedDownward", "1", Localization.LocalizeString(other.IMiniSimDescription.IsFemale, localizationKey + ":OrdinalSuffixNoun1"), "", "");
+            }
+            else if (Genealogy.IsNephew(other, self) && (!GenealogyExtended.IsHalfNephew(other, self) || Tuning.kShowHalfRelativesAsFullRelatives))
+            {
+                text = !Common.PlayerLanguage.HasNthUncles || Tuning.kShow1stCousinsAsCousins ? Localization.LocalizeString(other.IMiniSimDescription.IsFemale, "Gameplay/Socializing:Nephew") : Localization.LocalizeString(other.IMiniSimDescription.IsFemale, localizationKey + ":NthCousinNxRemovedDownward", "1", Localization.LocalizeString(other.IMiniSimDescription.IsFemale, localizationKey + ":OrdinalSuffixNoun1"), "", "");
+            }
+            else if (Common.PlayerLanguage.TryGetDescendantOfSiblingString(other, self, out text))
+            {
+            }
+            else if (GenealogyExtended.IsHalfCousin(other, self) && Tuning.kShowHalfRelatives && !Tuning.kShowHalfRelativesAsFullRelatives && Tuning.kShow1stCousinsAsCousins)
+            {
+                text = Localization.LocalizeString(other.IMiniSimDescription.IsFemale, localizationKey + ":HalfCousin");
+            }
+            else if (Genealogy.IsCousin(other, self) && Tuning.kShow1stCousinsAsCousins && (!GenealogyExtended.IsHalfCousin(other, self) || Tuning.kShowHalfRelativesAsFullRelatives))
+            {
+                text = Localization.LocalizeString(other.IMiniSimDescription.IsFemale, "Gameplay/Socializing:Cousin");
+            }
+            else if (Common.PlayerLanguage.TryGetDistantRelationString(other, self, out text))
+            {
+            }
+            else if (Genealogy.IsParentInLaw(other, self))
+            {
+                text = Localization.LocalizeString(other.IMiniSimDescription.IsFemale, "Gameplay/Socializing:ParentInLaw");
+            }
+            // Check if the selected Sim is married to one of the target's descendants.
+            else if (self.Spouse != null && self.Spouse != other && self.Spouse.GetGenealogyPlaceholder().IsAncestor(other) && self.PartnerType == PartnerType.Marriage)
+            {
+                if (Genealogy.IsGrandparent(other, self.Spouse))
+                {
+                    text = Localization.LocalizeString(other.IMiniSimDescription.IsFemale, localizationKey + ":GrandparentInLaw");
+                }
+                else if (Genealogy.IsGreatGrandparent(other, self.Spouse))
+                {
+                    text = Localization.LocalizeString(other.IMiniSimDescription.IsFemale, localizationKey + ":GGPInLaw");
+                }
+                else
+                {
+                    text = Common.PlayerLanguage.GetAncestorString(other.IMiniSimDescription.IsFemale, other, self.Spouse, true);
+                }
+            }
+            else if (Genealogy.IsChildInLaw(other, self))
+            {
+                text = Localization.LocalizeString(other.IMiniSimDescription.IsFemale, "Gameplay/Socializing:ChildInLaw");
+            }
+            // Check if the target is married to one of the selected Sim's descendants.
+            else if (other.Spouse != null && other.Spouse != self && other.Spouse.GetGenealogyPlaceholder().IsAncestor(self) && other.PartnerType == PartnerType.Marriage)
+            {
+                if (Genealogy.IsGrandchild(other.Spouse, self))
+                {
+                    text = Localization.LocalizeString(other.IMiniSimDescription.IsFemale, localizationKey + ":GrandchildInLaw");
+                }
+                else if (Genealogy.IsGreatGrandchild(other.Spouse, self))
+                {
+                    text = Localization.LocalizeString(other.IMiniSimDescription.IsFemale, localizationKey + ":GGCInLaw");
+                }
+                else
+                {
+                    text = Common.PlayerLanguage.GetDescendantString(other.IMiniSimDescription.IsFemale, other.Spouse, self, true);
+                }
+            }
+            else if (GenealogyExtended.IsHalfSiblingInLaw(other, self) && Tuning.kShowHalfRelatives && !Tuning.kShowHalfRelativesAsFullRelatives)
+            {
+                text = Localization.LocalizeString(other.IMiniSimDescription.IsFemale, localizationKey + ":HalfSiblingInLaw");
+            }
+            else if (Genealogy.IsSiblingInLaw(other, self) && (!GenealogyExtended.IsHalfSiblingInLaw(other, self) || Tuning.kShowHalfRelativesAsFullRelatives))
+            {
+                text = Localization.LocalizeString(other.IMiniSimDescription.IsFemale, "Gameplay/Socializing:SiblingInLaw");
+            }
+            if (other.IsFutureAncestorOf(self))
+            {
+                text = Localization.LocalizeString(other.IMiniSimDescription.IsFemale, "Gameplay/Socializing:Ancestor");
+            }
+            else if (other.IsFutureDescendantOf(self))
+            {
+                text = Localization.LocalizeString(other.IMiniSimDescription.IsFemale, "Gameplay/Socializing:Descendant");
+            }
+            if (self.SimDescription == null || other.SimDescription == null)
+            {
+                MiniSimDescription miniSimDescription = MiniSimDescription.Find(self.IMiniSimDescription.SimDescriptionId);
+                if (miniSimDescription != null && miniSimDescription.MiniRelationships != null)
+                {
+                    foreach (MiniRelationship miniRelationship in miniSimDescription.MiniRelationships)
+                    {
+                        if (miniRelationship.SimDescriptionId == other.IMiniSimDescription.SimDescriptionId)
+                        {
+                            if (miniRelationship.CurrentLTR != LongTermRelationshipTypes.Spouse && (miniRelationship.InteractionBits & LongTermRelationship.InteractionBits.AreLitterMates) != 0)
+                            {
+                                text = Localization.LocalizeString(other.IMiniSimDescription.IsFemale, "Gameplay/Socializing:Sibling_Pet");
+                            }
+                            if ((miniRelationship.InteractionBits & LongTermRelationship.InteractionBits.HumanParentPetRel) != 0)
+                            {
+                                if (self.IMiniSimDescription.IsHuman)
+                                {
+                                    if (other.IMiniSimDescription.IsADogSpecies)
+                                    {
+                                        text = Localization.LocalizeString(other.IMiniSimDescription.IsFemale, "Gameplay/Socializing:Owns_puppy");
+                                    }
+                                    if (other.IMiniSimDescription.IsCat)
+                                    {
+                                        text = Localization.LocalizeString(other.IMiniSimDescription.IsFemale, "Gameplay/Socializing:Owns_kitten");
+                                    }
+                                }
+                                else
+                                {
+                                    text = Localization.LocalizeString(other.IMiniSimDescription.IsFemale, "Gameplay/Socializing:Parent");
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                Relationship relationship = Relationship.Get(self.SimDescription, other.SimDescription, false);
+                if (relationship != null)
+                {
+                    if (relationship.CurrentLTR != LongTermRelationshipTypes.Spouse && relationship.LTR.HasInteractionBit(LongTermRelationship.InteractionBits.AreLitterMates))
+                    {
+                        text = Localization.LocalizeString(other.SimDescription.IsFemale, "Gameplay/Socializing:Sibling_Pet");
+                    }
+                    if (relationship.LTR.HasInteractionBit(LongTermRelationship.InteractionBits.HumanParentPetRel))
+                    {
+                        if (self.IMiniSimDescription.IsHuman)
+                        {
+                            if (other.SimDescription.IsADogSpecies)
+                            {
+                                text = Localization.LocalizeString(other.SimDescription.IsFemale, "Gameplay/Socializing:Owns_puppy");
+                            }
+                            if (other.SimDescription.IsCat)
+                            {
+                                text = Localization.LocalizeString(other.SimDescription.IsFemale, "Gameplay/Socializing:Owns_kitten");
+                            }
+                        }
+                        else
+                        {
+                            text = Localization.LocalizeString(other.SimDescription.IsFemale, "Gameplay/Socializing:Parent");
+                        }
+                    }
+                }
+            }
+            if ((other.IMiniSimDescription.IsEP11Bot || self.IMiniSimDescription.IsEP11Bot || (other.IMiniSimDescription.IsFrankenstein || self.IMiniSimDescription.IsFrankenstein) && Tuning.kReplaceRelationsForSimBots) && !string.IsNullOrEmpty(text))
+            {
+                if (Genealogy.IsParent(other, self) && (self.IMiniSimDescription.IsEP11Bot || self.IMiniSimDescription.IsFrankenstein && Tuning.kReplaceRelationsForSimBots))
+                {
+                    text = Localization.LocalizeString(other.IMiniSimDescription.IsFemale, "Gameplay/Socializing:Creator");
+                }
+                else if (Genealogy.IsChild(other, self) && (other.IMiniSimDescription.IsEP11Bot || other.IMiniSimDescription.IsFrankenstein && Tuning.kReplaceRelationsForSimBots))
+                {
+                    text = Localization.LocalizeString(other.IMiniSimDescription.IsFemale, "Gameplay/Socializing:Creation");
+                }
+                else if ((self.IMiniSimDescription.IsEP11Bot || self.IMiniSimDescription.IsFrankenstein && Tuning.kReplaceRelationsForSimBots) && !(other.IMiniSimDescription.IsEP11Bot || other.IMiniSimDescription.IsFrankenstein && Tuning.kReplaceRelationsForSimBots))
+                {
+                    text = Localization.LocalizeString(other.IMiniSimDescription.IsFemale, "Gameplay/Socializing:FamilyMember");
+                }
+                else if (other.IMiniSimDescription.IsEP11Bot)
+                {
+                    text = Localization.LocalizeString(other.IMiniSimDescription.IsFemale, "Gameplay/Socializing:FamilyBot");
+                }
+                else if (other.IMiniSimDescription.IsFrankenstein && Tuning.kReplaceRelationsForSimBots)
+                {
+                    text = Localization.LocalizeString(other.IMiniSimDescription.IsFemale, localizationKey + ":FamilyBot");
+                }
+            }
+            return text.Capitalize();
+        }
+
         public static GenealogyPlaceholder GetGenealogyPlaceholder(this Genealogy self)
         {
             return GenealogyPlaceholder.GetGenealogyPlaceholder(self);
@@ -518,6 +761,27 @@ namespace Destrospean.ExpandedGenealogy
                 }
             }
             return false;
+        }
+
+        public static bool IsFutureAncestorOf(this Genealogy ancestor, Genealogy descendant)
+        {
+            if (Sims3.Gameplay.TimeTravel.FutureDescendantService.sPersistableData != null)
+            {
+                foreach (Sims3.Gameplay.TimeTravel.FutureDescendantService.FutureDescendantHouseholdInfo current in Sims3.Gameplay.TimeTravel.FutureDescendantService.sPersistableData.ActiveDescendantHouseholdsInfo)
+                {
+                    if (current.mHouseholdMembers.Contains(descendant.IMiniSimDescription.SimDescriptionId) && current.IsSimAnAncestor(ancestor.IMiniSimDescription.SimDescriptionId))
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
+            return false;
+        }
+
+        public static bool IsFutureDescendantOf(this Genealogy descendant, Genealogy ancestor)
+        {
+            return ancestor.IsFutureAncestorOf(descendant);
         }
 
         public static bool IsHalfCousin(this Genealogy sim1, Genealogy sim2, int degree = 1, int timesRemoved = 0, Genealogy closestDescendant = null)
