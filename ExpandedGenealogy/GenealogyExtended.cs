@@ -767,25 +767,14 @@ namespace Destrospean.ExpandedGenealogy
         {
             if (Sims3.Gameplay.TimeTravel.FutureDescendantService.sPersistableData != null)
             {
-                foreach (Sims3.Gameplay.TimeTravel.FutureDescendantService.FutureDescendantHouseholdInfo householdInfo in Sims3.Gameplay.TimeTravel.FutureDescendantService.sPersistableData.ActiveDescendantHouseholdsInfo)
+                foreach (Sims3.Gameplay.TimeTravel.FutureDescendantService.FutureDescendantHouseholdInfo current in Sims3.Gameplay.TimeTravel.FutureDescendantService.sPersistableData.ActiveDescendantHouseholdsInfo)
                 {
-                    if (householdInfo.mHouseholdMembers.Contains(descendant.IMiniSimDescription.SimDescriptionId))
+                    if (current.mHouseholdMembers.Contains(descendant.IMiniSimDescription.SimDescriptionId) && current.IsSimAnAncestor(ancestor.IMiniSimDescription.SimDescriptionId))
                     {
-                        if (householdInfo.IsSimAnAncestor(ancestor.IMiniSimDescription.SimDescriptionId))
-                        {
-                            return true;
-                        }
-                        foreach (ulong id in householdInfo.mAncestorsSimIds)
-                        {
-                            IMiniSimDescription sim = SimDescription.Find(id) as IMiniSimDescription ?? MiniSimDescription.Find(id);
-                            Genealogy genealogy = sim.GetType().GetProperty("Genealogy").GetValue(sim, null) as Genealogy;
-                            if (genealogy != null && genealogy.GetGenealogyPlaceholder().IsAncestor(ancestor.GetGenealogyPlaceholder()))
-                            {
-                                return true;
-                            }
-                        }
+                        return true;
                     }
                 }
+                return false;
             }
             return false;
         }
